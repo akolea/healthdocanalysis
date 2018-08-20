@@ -13,7 +13,7 @@ img1 = image1.imageobj(sys.argv[1])
 #os.rename("teemmpp.png", "123.png")
 
 img1.contrast().sharpen()
-os.rename("../output/teemmpp.png", "../output/9876.png")
+os.rename(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + "teemmpp.png", sys.argv[1][0:sys.argv[1].rfind('/') + 1] + "9876.png")
 
 #img1.contrasttoo()
 #os.rename("teemmpp.png", "12345.png")

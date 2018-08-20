@@ -1,9 +1,14 @@
 #!/bin/bash
 export GOOGLE_APPLICATION_CREDENTIALS=~/gcloud/apikey.json
-rm ../output/*ServiceOutput* 2>/dev/null
-rm ../output/*EOBentries* 2>/dev/null
-rm ../output/*temp*.jpg
-rm ../output/*doc*.pdf
+
+python prefix.py $1
+mapfile -t filenames <dirname.txt
+
+rm ${filenames[1]}
+rm ${filenames[2]}
+rm ${filenames[3]}
+rm ${filenames[4]}
+
 #If a pdf, first convert pdf to images of each page
 if [[ $1 == *.pdf ]]
 then
@@ -12,7 +17,8 @@ then
     python separatepdfs.py $1
     if [[ $? == 1 ]]
     then
-        echo "Unsuccesful Conversion"
+        echo "Unsuccessful Conversion"
+        exit 0
     else
         COUNT=$(ls -lR ./${1::-4}temp*.jpg | wc -l)
         #For each page, conduct ocr using the ocrdoctest5.py script
@@ -25,7 +31,7 @@ then
             then
                 echo "Conducting ocr on page 1"
                 python ocrdoctest5.py ${1::-4}temp$i.jpg #2>/dev/null
-                mapfile -t lines <../output/whatkind.txt
+                mapfile -t lines <${filenames[5]}
             else
                 echo "Conducting ocr on page $((i + 1))"
                 if [[ ${lines[0]} = *"BILL"* ]]
@@ -44,7 +50,8 @@ then
         done
         if [[ $? == 1 ]]
         then
-            echo "OCR was unsucessful"
+            echo "OCR was unsuccessful"
+            exit 0
         else
             #Combinedocs.py is run to generate ServiceOutputFinal.txt
             echo "Aggregating results on service"
@@ -52,6 +59,7 @@ then
             if [[ $? == 1 ]]
             then
                 echo "Could not aggregate results. See ServiceOutputn for more info"
+                exit 0
             else
                 echo "Process Complete"
             fi
@@ -66,13 +74,15 @@ then
     python ocrdoctest5.py $1 #2>/dev/null
     if [[ $? == 1 ]]
     then
-        echo "OCR was unsuccesful"
+        echo "OCR was unsuccessful"
+        exit 0
     else
         echo "Aggregating results on service"
         python combinedocs.py $1 #2>/dev/null
         if [[ $? == 1 ]]
         then
             echo "Could not aggregate results. See ServiceOutput0.txt for more info"
+            exit 0
         else
             echo "Process Completed"
         fi
@@ -82,22 +92,43 @@ else
 fi
 
 #Cleanup the NLP documents
-python cleanupfile.py ../output/NLPHORIZONTALS.txt 2>/dev/null
-python cleanupfile.py ../output/NLPSERVICELINES.txt 2>/dev/null
+python cleanupfile.py ${filenames[7]} 2>/dev/null
+python cleanupfile.py ${filenames[6]} 2>/dev/null
 
 #Here, create a folder for the date of service, if it doesnt exist and move the file we were analyzing, as well as ServiceOutputFinal to the directory. If it does exist,
 #ie. there are other documents for the same date of service, add the file and its corresponding output to the directory 
 mapfile -t liness <${1::-4}ServiceOutputFinal.txt
-if [ -d ../output/${liness[1]:6} ]
+#if [ -d ${filenames[0]}${liness[1]:6} ]
+#then
+#    echo ""
+#else
+#    mkdir ${filenames[0]}${liness[1]:6}
+#fi
+
+#if [ -d ${filenames[0]}${liness[1]:6} ]
+#then
+#    mv ${1::-4}ServiceOutputFinal.txt  ${filenames[0]}${liness[1]:6}/
+#    mv $1 ${filenames[0]}${liness[1]:6}
+#    mv ${1::-4}* ${filenames[0]}${liness[1]:6}
+#fi
+
+#Move all intermediary files to temp folder
+empty=""
+if [ -d ${filenames[0]}inter ]
 then
     echo ""
 else
-    mkdir ../output/${liness[1]:6}
+    mkdir ${filenames[0]}inter
 fi
 
-if [ -d ../output/${liness[1]:6} ]
+if [ -f ${filenames[0]}inter/${1/${filenames[0]}/$empty::-4}ServiceOutput0.txt ]
 then
-    mv ${1::-4}ServiceOutputFinal.txt  ../output/${liness[1]:6}/
-    mv $1 ../output/${liness[1]:6}
-    mv ${1::-4}* ../output/${liness[1]:6}
+    rm ${filenames[0]}inter/${1/${filenames[0]}/$empty}*
+fi
+
+if [ -d ${filenames[0]}inter ]
+then
+    mv ${1::-4}* ${filenames[0]}inter
+    mv ${filenames[0]}inter/*ServiceOutputFinal.txt ${filenames[0]}
+    mv ${filenames[0]}inter/${1/${filenames[0]}/$empty} ${filenames[0]}
 fi

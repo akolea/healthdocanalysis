@@ -14,8 +14,12 @@ class imageobj:
 
     def convtoim(self, arr):
         img = Image.fromarray(arr)
-        img.save("../output/teemmpp.png")
-        return "../output/teemmpp.png"
+        out = ''
+        with open("dirname.txt", rb) as f1:
+            out = f1.readlines()[0]
+        img.save(out + "teemmpp.png")
+        outstriing = out + "teemmpp.png"
+        return outstriing
     #Rotate the image to make it horizontal
     def rotate(self):
         iii = cv2.imread(self.image)

@@ -19,7 +19,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-prefix = sys.argv[1][10:-4]
+prefix = sys.argv[1][sys.argv[1].rfind('/')+1:-4]
 #Methods we will need
 def isfloat(str):
     try:
@@ -41,11 +41,11 @@ def isitadate(str):
         return False
 
 #Number of ServiceOutput Files
-numof = len(glob.glob1('../output/', prefix + "ServiceOutput*"))
+numof = len(glob.glob1(sys.argv[1][0:sys.argv[1].rfind('/') + 1], prefix + "ServiceOutput*"))
 allentries = []
 
 for f in xrange(0, numof):
-    with open('../output/' + prefix + "ServiceOutput"+str(f)+".txt", "rb") as tt:
+    with open(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + prefix + "ServiceOutput"+str(f)+".txt", "rb") as tt:
         allentries.append(tt.readlines())
 
 #Determine document type
@@ -152,7 +152,7 @@ if isBill:
             if ':' not in entry[l] and '.' in entry[l].strip()[-4:] and isfloat(entry[l].strip()[-1:]):
                 finalarray.append(entry[l])
 
-with open('../output/' + prefix + "ServiceOutputFinal.txt", 'w+') as f1:
+with open(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + prefix + "ServiceOutputFinal.txt", 'w+') as f1:
     for line in finalarray:
         f1.write(line)
 
@@ -160,9 +160,9 @@ ddd = ''
 numberss = ['1','2','3','4','5','6','7','8','9','0','/']
 numbers = ['1','2','3','4','5','6','7','8','9','0']
 #Replace the date in a format with which a directory can be made ('/' are replaced with '-')
-with open('../output/' + prefix + "ServiceOutputFinal.txt", "rb") as f1:
+with open(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + prefix + "ServiceOutputFinal.txt", "rb") as f1:
     lin = f1.readlines()
-    with open("../output/temp.txt", 'w+') as f2:
+    with open(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + "temp.txt", 'w+') as f2:
         for l in lin:
             if 'Date:' in l:
                 t = l
@@ -180,7 +180,7 @@ with open('../output/' + prefix + "ServiceOutputFinal.txt", "rb") as f1:
                 f2.write("\n")
             else:
                 f2.write(l)
-os.rename("../output/temp.txt", "../output/" + prefix + "ServiceOutputFinal.txt")
+os.rename(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + "temp.txt", sys.argv[1][0:sys.argv[1].rfind('/') + 1] + prefix + "ServiceOutputFinal.txt")
 
 datspl = ddd.split('-')
 tempdatspl = []
@@ -195,23 +195,24 @@ if len(tempdatspl[2]) == 1:
 
 ddd = '-'.join(tempdatspl)
 
-with open('../output/' + prefix + "ServiceOutputFinal.txt", "rb") as f1:
+with open(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + prefix + "ServiceOutputFinal.txt", "rb") as f1:
     lin = f1.readlines()
-    with open('../output/' + "temp.txt", 'w+') as f2:
+    with open(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + "temp.txt", 'w+') as f2:
         for l in lin:
             if 'Date:' in l:
                 f2.write("Date: " + ddd)
                 f2.write('\n')
             else:
                 f2.write(l)
-os.rename('../output/' + "temp.txt",'../output/' + prefix + "ServiceOutputFinal.txt")
+os.rename(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + "temp.txt", sys.argv[1][0:sys.argv[1].rfind('/') + 1] + prefix + "ServiceOutputFinal.txt")
 
 
 
 
 #Display results of process
-with open('../output/' + prefix + "ServiceOutputFinal.txt", "rb") as f1:
+with open(sys.argv[1][0:sys.argv[1].rfind('/') + 1] + prefix + "ServiceOutputFinal.txt", "rb") as f1:
     print("Service Information: \n")
     for lin in f1.readlines():
         print(lin.replace("\n",''))
-    print("\n\nSee folder " + ddd + "/ to access data")
+    print("\n\nSee folder data/ to access data. Intermediate files are stored in subdirectory inter")
+

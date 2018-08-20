@@ -1,4 +1,3 @@
-#TEST EDIT#-------------------
 from __future__ import unicode_literals, print_function
 import csv
 import io
@@ -67,11 +66,11 @@ for i in xrange(0,1):
 
     argue = sys.argv[1][sys.argv[1].rfind('/') + 1:]
     if 'temp' in argue:
-        Servfile = '../output/' + argue[0:-9] + "ServiceOutput" + str(len(glob.glob1('../output/', argue[0:-9] + "ServiceOutput*"))) + ".txt"
-        EOBfile = '../output/' + argue[0:-9] + "EOBentries" + str(len(glob.glob1('../output/', argue[0:-9] + "EOBentries*"))) + ".csv"
+        Servfile = sys.argv[1][0:sys.argv[1].rfind('/') + 1] + argue[0:-9] + "ServiceOutput" + str(len(glob.glob1(sys.argv[1][0:sys.argv[1].rfind('/') + 1], argue[0:-9] + "ServiceOutput*"))) + ".txt"
+        EOBfile = sys.argv[1][0:sys.argv[1].rfind('/') + 1] + argue[0:-9] + "EOBentries" + str(len(glob.glob1(sys.argv[1][0:sys.argv[1].rfind('/') + 1], argue[0:-9] + "EOBentries*"))) + ".csv"
     else:
-        Servfile = '../output/' + argue[0:-4] + "ServiceOutput" + str(len(glob.glob1('../output/', argue[0:-4] + "ServiceOutput*"))) + ".txt"
-        EOBfile = '../output/' + argue[0:-4] + "EOBentries" + str(len(glob.glob1('../output/', argue[0:-4] + "EOBentries*"))) + ".csv"
+        Servfile = sys.argv[1][0:sys.argv[1].rfind('/') + 1] + argue[0:-4] + "ServiceOutput" + str(len(glob.glob1(sys.argv[1][0:sys.argv[1].rfind('/') + 1], argue[0:-4] + "ServiceOutput*"))) + ".txt"
+        EOBfile = sys.argv[1][0:sys.argv[1].rfind('/') + 1] + argue[0:-4] + "EOBentries" + str(len(glob.glob1(sys.argv[1][0:sys.argv[1].rfind('/') + 1], argue[0:-4] + "EOBentries*"))) + ".csv"
 
 
     #Load OCR
@@ -385,6 +384,26 @@ for i in xrange(0,1):
         for n in xrange(0, len(arrcopy[i])):
             tempsent2 += arrcopy[i][n]
         sssenttt2.append(tempsent2)
+    docarray = arrflip
+    #----------------Document text extraction--------------------#
+    docHORIZONTALSENTENCES = []
+    for i in xrange(0, len(docarray)-1):
+        sentence = ""
+        for n in xrange(0, len(docarray[i])):
+            sentence += docarray[i][n]
+            sentence += " "
+        docHORIZONTALSENTENCES.append(sentence)
+    for har in docHORIZONTALSENTENCES:
+        deleteme = True
+        for char in xrange(0, len(har)):
+            if har[char:char+1] != ' ':
+                deleteme = False
+                break
+        if deleteme == True:
+            docHORIZONTALSENTENCES.remove(har)
+    #------------------------------------------------------------#
+
+
     #Remove empty values
     for liset in arrflip:
         liset[:] = [item for item in liset if item != '']
@@ -433,13 +452,15 @@ for i in xrange(0,1):
     #Remove the empty lists
     HORIZONTALSENTENCES[:] = [item for item in HORIZONTALSENTENCES if item != '']
     HORIZONTALS[:] = [item for item in HORIZONTALS if item != '']
+
+
     #End progress on creation of sentences
     timer.update(20)
     timer.finish()
     time.sleep(1)
     print("\n\n\n")
-    print("SENTENCES CONTAINED WITHIN FILE: ")
-    for a in HORIZONTALSENTENCES:
+    print("Document Text: ")
+    for a in docHORIZONTALSENTENCES:
         print(a)
     print("\n\n\n\n")
 
@@ -447,7 +468,12 @@ for i in xrange(0,1):
         f1.write("SENTENCES CONTAINED WITHIN FILE: ")
         for s in HORIZONTALSENTENCES:
             f1.write(s)
-
+            f1.write('\n')
+    with open(Servfile.replace('ServiceOutput', 'DocumentText'), 'w+') as f1:
+        f1.write("Document Text: ")
+        for s in docHORIZONTALSENTENCES:
+            f1.write(s)
+            f1.write('\n')
     #Read Top to Bottom using the following method, left and right vertices are extended downwoard and any words that fall within are part of the reading up and down
     UPDOWN = []
     usedindex = []
@@ -979,23 +1005,27 @@ for i in xrange(0,1):
                     if 'total' not in r.lower() and 'payment' not in r.lower() and 'adjust' not in r.lower() and 'owe' not in r.lower() and 'balance' not in r.lower() and 'discount' not in r.lower() and 'insurance' not in r.lower():
                         text_file.write(r + "\n")
 
-    #Store the type of document
-    with open("../output/whatkind.txt", 'w+') as f1:
-        f1.write(whatkindofdocument)
 
-    #Write the NLP text files
-    if iseob:
-        with open("../output/NLPSERVICELINES.txt", 'a') as f1:
-            for sent in HORIZONTALSENTENCES:
-                if "#*!" in sent:
-                    f1.write(sent.replace("#*!", '').strip())
-                    f1.write("\n")
-    with open("../output/NLPHORIZONTALS.txt", 'a') as f2:
-        for s in xrange(2, len(HORIZONTALSENTENCES)):
-            if "#*!" in HORIZONTALSENTENCES[s]:
-                f2.write(HORIZONTALSENTENCES[s].replace("#*!", '').strip())
-                f2.write("\n")
-            else:
-                f2.write(HORIZONTALSENTENCES[s])
-                f2.write("\n")
+    with open("dirname.txt", 'rb') as g1:
+        thingsinit = g1.readlines()
+        #Store the type of document
+        with open(thingsinit[-3], 'w+') as f1:
+            f1.write(whatkindofdocument)
+
+        #Write the NLP text files
+        if iseob:
+            with open(thingsinit[-1], 'a') as f1:
+                for sent in HORIZONTALSENTENCES:
+                    if "#*!" in sent:
+                        f1.write(sent.replace("#*!", '').strip())
+                        f1.write("\n")
+        with open(thingsinit[-2], 'a') as f2:
+            for s in xrange(2, len(HORIZONTALSENTENCES)):
+                if "#*!" in HORIZONTALSENTENCES[s]:
+                    f2.write(HORIZONTALSENTENCES[s].replace("#*!", '').strip())
+                    f2.write("\n")
+                else:
+                    f2.write(HORIZONTALSENTENCES[s])
+                    f2.write("\n")
+
 

@@ -40,9 +40,9 @@ documents = []
 for i in range(inputpdf.numPages):
     output = PdfFileWriter()
     output.addPage(inputpdf.getPage(i))
-    with open('../output/' + prefix + "doc%s.pdf" % i, "wb") as outputStream:
+    with open(file_name[0:file_name.rfind('/') + 1] + prefix + "doc%s.pdf" % i, "wb") as outputStream:
         output.write(outputStream)
-        documents.append('../output/' + prefix + "doc%s.pdf" % i)
+        documents.append(file_name[0:file_name.rfind('/') + 1] + prefix + "doc%s.pdf" % i)
 
 
 #Convert each page into an image
@@ -50,6 +50,6 @@ ee = extractjpg.extractor()
 
 for i in xrange(0, len(documents)):
     print("Extracting page " + str(i+1))
-    ee.extractImage(prefix, documents[i], i)
+    ee.extractImage(file_name[0:file_name.rfind('/') + 1], prefix, documents[i], i)
 
 
